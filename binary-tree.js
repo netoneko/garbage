@@ -45,3 +45,7 @@ const toArray = (node, array, index) => {
 console.log(toTree([0, 1, 2, 3, 4, 5, 6]));
 
 console.log(toArray(toTree([0, 1, 2, 3, 4, 5, 6])));
+
+module.exports = {
+    toTree, toArray
+};
