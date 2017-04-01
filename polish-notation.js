@@ -27,14 +27,21 @@ const f = (allArgs) => {
     var operation = operations[allArgs[0]],
         args = allArgs.slice(1).map((x) => parseInt(x, 10));
 
-    console.log(allArgs)
+    if (operation === undefined) {
+        return allArgs;
+    }
+
+    if (args.length === 0) {
+        return operation();
+    }
 
     return args.reduce(operation);
 };
 
 const convertToStack = (str, f) => {
     const chars = str.split(' '),
-        stack = [];
+        stack = [],
+        hasTransformFunction = typeof(f) === 'function';
 
     var level = 0,
         currentStack = [];
@@ -52,7 +59,13 @@ const convertToStack = (str, f) => {
         } else if (char === ')') {
             level--;
 
-            currentStack = stack.shift();
+            if (hasTransformFunction) {
+                var value = f(currentStack);
+                currentStack = stack.shift();
+                currentStack[currentStack.length - 1] = value;
+            } else {
+                currentStack = stack.shift();
+            }
         } else {
             currentStack.push(char);
         }
@@ -62,11 +75,15 @@ const convertToStack = (str, f) => {
         return;
     }
 
+    if (hasTransformFunction) {
+        return f(currentStack);
+    }
+
     return currentStack;
 };
 
 const compute = (str) => {
-    return f(str.split(' '));
+    return convertToStack(str, f);
 };
 
 assert.deepEqual(compute('+ 2 3'), 5);
@@ -87,6 +104,10 @@ assert.deepEqual(convertToStack('( 1 0 ( 2 3 ) )'), [['1', '0', ['2', '3']]]);
 
 assert.deepEqual(convertToStack('( 1 0 ( 2 3 ) 7 )'), [['1', '0', ['2', '3'], '7']]);
 
-// assert.deepEqual(convertToStack('* 1 2 ( + 5 1 )', f), 14);
+assert.deepEqual(compute('* 1 2 ( + 5 2 )'), 14);
 
-//assert.deepEqual(convertToStack('(2 (1 0))'), [2, [1, 0]]);
+assert.deepEqual(compute('* 1 2 ( + 5 2 ) -2'), -28);
+
+assert.deepEqual(compute('( * 1 2 ( + 5 2 ) -2 )'), [-28]);
+
+assert.deepEqual(compute('( )'), [[]]);
